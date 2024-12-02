@@ -20,7 +20,7 @@ async function loginToDiscord(client) {
             clientId: CLIENT_ID
         });
         user = loginPromise.user;
-        console.log(user)
+        console.log((user && user.username) || user)
     } finally { }
 
     return user
@@ -77,7 +77,7 @@ http.createServer((request, response) => {
                 data = undefined;
             }
 
-            if ((!data) || data.updateType === "STOP") { // change from updateType to something descriptive
+            if ((!data) || data.State === "STOP") { // change from updateType to something descriptive
                 discordClient.clearActivity().catch();
                 endResponse();
                 return;
