@@ -1,9 +1,14 @@
+import * as chalk from "chalk";
 import { Client } from "discord-rpc";
 import http from "node:http";
 
 const CLIENT_ID = "1310621078007054477";
 const SERVER_PORT = process.env.PORT || 7000;
-const MAX_SLEEP = 30e3;
+const MAX_TIME_BETWEEN_CONNECTION_ATTEMPTS = 30e3; //TODO: Better name.
+/*
+ * This variable dictates the maximum time between
+ * connections to the Discord RPC server.
+ */
 
 Math.clamp = function(number, min, max) {
     return Math.min(Math.max(number, min), max)
@@ -13,7 +18,7 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function loginToDiscord(client) {
+async function loginClient(client) {
     let user;
     try {
         let loginPromise = await client.login({
@@ -21,12 +26,12 @@ async function loginToDiscord(client) {
         });
         user = loginPromise.user;
         console.log((user && user.username) || user)
-    } finally { }
+    } catch { }
 
     return user
 }
 
-async function start(client) {
+async function startClient(client) {
     let user;
 
     let sleepTime = 0;
@@ -34,21 +39,24 @@ async function start(client) {
     while (!user) {
         await sleep(sleepTime);
 
-        sleepTime = Math.clamp(sleepTime * 2, 5e3, MAX_SLEEP);
+        sleepTime = Math.clamp(
+            sleepTime * 2,
+            5e3,
+            MAX_TIME_BETWEEN_CONNECTION_ATTEMPTS
+        );
 
         try {
             console.log("attempting login")
-            user = await loginToDiscord(client);
+            user = await loginClient(client);
         } catch { }
     }
 }
 
 const discordClient = new Client({ transport: "ipc" });
 
-start(discordClient);
+startClient(discordClient);
 
 http.createServer((request, response) => {
-    console.log("New request!")
     let data = "";
 
     function endResponse() {
@@ -62,7 +70,7 @@ http.createServer((request, response) => {
 
     request.on("data", (chunk) => {
         data += chunk;
-        console.log(data)
+
         if (data.length > 1e6) {
             console.log("Too much data! Closing.")
             request.destroy();
@@ -73,23 +81,22 @@ http.createServer((request, response) => {
         try {
             try {
                 data = JSON.parse(data);
-            } catch (e) {
+            } catch {
                 data = undefined;
             }
 
-            if ((!data) || data.State === "STOP") { // change from updateType to something descriptive
+            if ((!data) || data.requestType === "CLOSE") {
                 discordClient.clearActivity().catch();
                 endResponse();
                 return;
             }
+            data.requestType = undefined;
 
             discordClient.setActivity(data);
         } catch (err) {
-            console.error(err);
+            console.log(chalk.red(err));
 
-            discordClient.clearActivity().catch(() => {
-                console.error("Failed to clear activity!");
-            });
+            discordClient.clearActivity().catch();
         }
     });
 
