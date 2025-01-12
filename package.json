@@ -1,6 +1,33 @@
 {
-    "type": "module",
+    "name": "studiorp",
+    "version": "1.0.0",
+    "description": "Discord Rich Presence for Roblox Studio",
+    "main": "server/index.js",
+    "bin": "distribution/server/index.js",
+    "author": "cosmicwintr",
+    "license": "MIT",
+    "repository": "github:cosmicwintr/StudioRP",
+    "pkg": {
+        "scripts": "distribution/server/**/*.js",
+        "targets": [
+            "node*-win-x64",
+            "node*-macos-x64",
+            "node*-linux-x64"
+        ],
+        "outputPath": "release"
+    },
     "dependencies": {
-        "chalk": "^5.4.1"
+        "discord-rpc": "^4.0.1"
+    },
+    "scripts": {
+        "build:server": "rimraf distribution/server && ncc build source/server/index.js -o distribution/server",
+        "build:client": "rojo build -o release/StudioRP.rbxm",
+        "package:server": "rimraf release && npm run build:server && pkg .",
+        "package": "npm run package:server && npm run build:client"
+    },
+    "devDependencies": {
+        "@vercel/ncc": "^0.38.3",
+        "pkg": "^5.8.1",
+        "rimraf": "^6.0.1"
     }
 }

@@ -1,0 +1,6 @@
+{
+    "name": "StudioRP",
+    "tree": {
+        "$path": "source/client"
+    }
+}

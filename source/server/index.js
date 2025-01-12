@@ -1,4 +1,3 @@
-const chalk = require("chalk");
 const { Client } = require("discord-rpc");
 const http = require("node:http");
 
@@ -102,7 +101,7 @@ http.createServer((request, response) => {
 
             discordClient.setActivity(data);
         } catch (err) {
-            console.log(chalk.red(err));
+            console.log(`ERROR: ${err}`);
 
             discordClient.clearActivity().catch();
         }
