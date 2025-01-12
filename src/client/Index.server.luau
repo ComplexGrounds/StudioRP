@@ -1,6 +1,5 @@
 do
 	if plugin:GetAttribute("Running") then
-		print("returning")
 		return
 	end
 
@@ -13,7 +12,6 @@ do
 	if not success
 		and httpError:match("Http requests can only be executed by game server")
 	then
-		print("returning")
 		return
 	end
 end

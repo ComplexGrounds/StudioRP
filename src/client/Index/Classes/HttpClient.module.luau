@@ -25,9 +25,9 @@ function HttpClient.Cleanup(self: self): ()
 end
 
 function HttpClient.CloseConnection(self: self): ()
-	pcall(HttpService.PostAsync, HttpService, self.URL, HttpService:JSONEncode({
+	pcall(self.Post, self, {
 		["requestType"] = "CLOSE"
-	}), Enum.HttpContentType.ApplicationJson)
+	})
 
 	self:Cleanup()
 end

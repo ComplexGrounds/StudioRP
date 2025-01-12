@@ -45,7 +45,19 @@ function StudioRP.new(plugin: Plugin)
 				playtestActivity:SetState("Testing")
 				--:SetSmallImage("playtest_icon")
 			elseif StudioService.ActiveScript then
-				activity:SetState(`Editing {StudioService.ActiveScript.Name}`)
+				local activeScript: Script = StudioService.ActiveScript
+
+				local state = "Editing %s (%d line"
+				local _, lineCount = activeScript.Source:gsub("\n", "")
+
+				if lineCount ~= 1 then
+					state ..= "s"
+				end
+				state ..= ")"
+
+				state = string.format(state, activeScript.Name, lineCount)
+
+				activity:SetState(state)
 				--:SetSmallImage("") --TODO: Get script type and corresponding image key
 			else
 				activity:SetState("Developing")
@@ -60,8 +72,8 @@ function StudioRP.new(plugin: Plugin)
 
 			task.wait(1)
 		end
-
 	end)
+
 	coroutine.resume(self._heartbeat)
 
 	return self

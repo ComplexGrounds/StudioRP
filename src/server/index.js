@@ -1,6 +1,6 @@
-import * as chalk from "chalk";
-import { Client } from "discord-rpc";
-import http from "node:http";
+const chalk = require("chalk");
+const { Client } = require("discord-rpc");
+const http = require("node:http");
 
 const CLIENT_ID = "1310621078007054477";
 const SERVER_PORT = process.env.PORT || 7000;
@@ -11,11 +11,11 @@ const MAX_TIME_BETWEEN_CONNECTION_ATTEMPTS = 30e3; //TODO: Better name.
  */
 
 Math.clamp = function(number, min, max) {
-    return Math.min(Math.max(number, min), max)
+    return Math.min(Math.max(number, min), max);
 }
 
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function loginClient(client) {
@@ -25,10 +25,12 @@ async function loginClient(client) {
             clientId: CLIENT_ID
         });
         user = loginPromise.user;
-        console.log((user && user.username) || user)
+        if (user) {
+            console.log(user.username);
+        }
     } catch { }
 
-    return user
+    return user;
 }
 
 async function startClient(client) {
@@ -46,7 +48,7 @@ async function startClient(client) {
         );
 
         try {
-            console.log("attempting login")
+            console.log("attempting login");
             user = await loginClient(client);
         } catch { }
     }
@@ -55,6 +57,10 @@ async function startClient(client) {
 const discordClient = new Client({ transport: "ipc" });
 
 startClient(discordClient);
+
+discordClient.on("disconnected", () => {
+    startClient(discordClient);
+});
 
 http.createServer((request, response) => {
     let data = "";
@@ -72,7 +78,7 @@ http.createServer((request, response) => {
         data += chunk;
 
         if (data.length > 1e6) {
-            console.log("Too much data! Closing.")
+            console.log("Too much data! Closing.");
             request.destroy();
         }
     });
@@ -91,6 +97,8 @@ http.createServer((request, response) => {
                 return;
             }
             data.requestType = undefined;
+
+            console.log(data);
 
             discordClient.setActivity(data);
         } catch (err) {
