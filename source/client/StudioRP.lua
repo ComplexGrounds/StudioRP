@@ -39,11 +39,19 @@ function StudioRP.new(plugin: Plugin)
 	self._heartbeat = coroutine.create(function()
 		local activity = self.Activity or mainActivity
 
+		local heartbeatTime = 1
+		local heartbeatsSinceLastTimeChange = 0 -- needs a more concise name
+
 		while true do
+			task.wait(heartbeatTime)
+
 			if RunService:IsRunning() then
 				playtestActivity = Activity.new(DateTime.now())
-				playtestActivity:SetState("Testing")
+					:SetState("Testing")
+					:SetDetails(`Workspace: {gameName}`)
 				--:SetSmallImage("playtest_icon")
+
+				plugin:SetSetting("LastPlaytestTime", math.round(tick()))
 			elseif StudioService.ActiveScript then
 				local activeScript: Script = StudioService.ActiveScript
 
@@ -62,15 +70,45 @@ function StudioRP.new(plugin: Plugin)
 			else
 				activity:SetState("Developing")
 			end
-			if not RunService:IsRunning() then
-				playtestActivity = nil
-			end
 
+			local wasPlaytesting
+			do
+				local lastPlaytestTime = plugin:GetSetting("LastPlaytestTime")
+
+				if not RunService:IsRunning() then
+					-- ensure playtesting has ended before attempting to change activity
+					if
+						(not lastPlaytestTime)
+						or (tick() - tonumber(lastPlaytestTime)) > (heartbeatTime * 2)
+					then
+						plugin:SetSetting("LastPlaytestTime", nil)
+						wasPlaytesting = true
+					else
+						continue
+					end
+
+					playtestActivity = nil
+				end
+			end
 			local activityToSet = playtestActivity or activity
 
-			self:SetActivity(activityToSet)
+			local startTime = tick()
+			local success, message = self:SetActivity(activityToSet, wasPlaytesting)
 
-			task.wait(1)
+			local deltaTime = tick() - startTime
+
+			--plugin.Log(Enum.AnalyticsLogLevel.Debug, `Success: %s{message and '\nMessage: %s'}\nDelta Time: %.0f`, success, message, deltaTime)
+
+			heartbeatsSinceLastTimeChange += 1
+			if
+				success
+				and deltaTime > 2
+				and heartbeatsSinceLastTimeChange > (75 / deltaTime)
+			then
+				heartbeatTime += 1
+				heartbeatsSinceLastTimeChange = 0
+			end
+
 		end
 	end)
 
@@ -86,9 +124,18 @@ function StudioRP.Cleanup(self: self)
 	self.HttpClient = nil
 end
 
-function StudioRP.SetActivity(self: self, activity: Activity.self): (boolean, string?)
+function StudioRP.SetActivity(
+	self: self,
+	activity: Activity.self,
+	wasPlaytesting: boolean
+): (boolean, string?)
 	self.Activity = activity
-	return pcall(self.HttpClient.Post, self.HttpClient, activity)
+	return pcall(
+		self.HttpClient.Post,
+		self.HttpClient,
+		activity,
+		wasPlaytesting
+	)
 end
 
 type self = typeof(
