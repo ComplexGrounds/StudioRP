@@ -45,7 +45,11 @@ function HttpClient.Post(self: self, data: {any}, wasPlaytesting: boolean): stri
 		error("Repeated")
 	end
 
-	local response = HttpService:PostAsync(self.URL, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+	local response = HttpService:PostAsync(
+		self.URL,
+		HttpService:JSONEncode(data),
+		Enum.HttpContentType.ApplicationJson
+)
 
 	if response then
 		self._lastState = data.state

@@ -76,14 +76,13 @@ function StudioRP.new(plugin: Plugin)
 				local lastPlaytestTime = plugin:GetSetting("LastPlaytestTime")
 
 				if not RunService:IsRunning() then
-					-- ensure playtesting has ended before attempting to change activity
-					if
-						(not lastPlaytestTime)
-						or (tick() - tonumber(lastPlaytestTime)) > (heartbeatTime * 2)
-					then
+					--FIXME: This looks ugly.
+					--ensure playtesting has ended
+					-- before attempting to change activity
+					if (tick() - (tonumber(lastPlaytestTime) or math.huge)) > (heartbeatTime * 2) then
 						plugin:SetSetting("LastPlaytestTime", nil)
 						wasPlaytesting = true
-					else
+					elseif lastPlaytestTime then
 						continue
 					end
 

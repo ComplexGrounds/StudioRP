@@ -1,6 +1,6 @@
 {
     "name": "studiorp",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Discord Rich Presence for Roblox Studio",
     "main": "server/index.js",
     "bin": "distribution/server/index.js",
