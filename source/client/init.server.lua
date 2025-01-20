@@ -9,7 +9,8 @@ do
 		HttpService,
 		"https://google.com/",
 		"")
-	if not success
+	if
+		(not success)
 		and httpError:match("Http requests can only be executed by game server")
 	then
 		return

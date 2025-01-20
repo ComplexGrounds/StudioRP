@@ -7,8 +7,16 @@ function HttpClient.new(url: string)
 		error("Pattern of passed URL is invalid! Example valid URL: \"http://localhost:1234/\"")
 	end
 
-	local success, err = pcall(HttpService.PostAsync, HttpService, "https://roblox.com/", "")
-	if not success and err:match("Http requests can only be executed by game server") then
+	local success, err = pcall(
+		HttpService.PostAsync,
+		HttpService,
+		"https://roblox.com/",
+		""
+	)
+	if
+		not success
+		and err:match("Http requests can only be executed by game server")
+	then
 		error(err)
 	end
 
@@ -32,8 +40,8 @@ function HttpClient.CloseConnection(self: self): ()
 	self:Cleanup()
 end
 
-function HttpClient.Post(self: self, data: {any}): string
-	if self._lastState == data.state then
+function HttpClient.Post(self: self, data: {any}, wasPlaytesting: boolean): string
+	if (not wasPlaytesting) and self._lastState == data.state then
 		error("Repeated")
 	end
 
