@@ -1,7 +1,7 @@
 const { Client } = require("discord-rpc");
 const http = require("node:http");
 
-const CLIENT_ID = "1310621078007054477";
+const CLIENT_ID = "1351607979018813462";
 const SERVER_PORT = process.env.PORT || 7000;
 const MAX_TIME_BETWEEN_CONNECTION_ATTEMPTS = 30e3; //TODO: Better name.
 /*
@@ -58,6 +58,7 @@ const discordClient = new Client({ transport: "ipc" });
 startClient(discordClient);
 
 discordClient.on("disconnected", () => {
+    console.log("Disconnected! Attempting reconnection...");
     startClient(discordClient);
 });
 
@@ -88,6 +89,10 @@ http.createServer((request, response) => {
                 data = JSON.parse(data);
             } catch {
                 data = undefined;
+            }
+
+            if ((discordClient === null) || (discordClient.user === null)) {
+                return;
             }
 
             if ((!data) || data.requestType === "CLOSE") {

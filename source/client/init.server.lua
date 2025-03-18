@@ -25,4 +25,5 @@ local studioRP = StudioRP.new(plugin)
 
 plugin.Unloading:Once(function()
 	studioRP:Cleanup()
+	plugin:SetAttribute("Running", nil)
 end)
