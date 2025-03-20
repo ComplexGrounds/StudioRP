@@ -24,7 +24,7 @@ do
 end
 
 local placeIcon = nil
-do
+if game.PlaceId ~= 0 then
 	local success, response = pcall(function()
 		-- TODO: Expand the HttpClient to cover Roblox GET web requests.
 		-- Additionally, remove the hardcoding on this PATH once HttpClient is expanded.
@@ -51,6 +51,7 @@ function StudioRP.new(plugin: Plugin)
 	local mainActivity = Activity.new(DateTime.now())
 		:SetLargeImage(placeIcon or "studio_logo")
 		:SetDetails(`Workspace: {gameName}`)
+		:SetSmallImage(placeIcon and "bordered_studio_logo")
 	local playtestActivity
 
 	self._heartbeat = coroutine.create(function()
@@ -64,9 +65,10 @@ function StudioRP.new(plugin: Plugin)
 
 			if RunService:IsRunning() then
 				playtestActivity = Activity.new(DateTime.now())
+					:SetLargeImage(placeIcon or "studio_logo")
 					:SetState("Testing")
 					:SetDetails(`Workspace: {gameName}`)
-				--:SetSmallImage("playtest_icon")
+					:SetSmallImage(placeIcon and "bordered_studio_logo")
 
 				plugin:SetSetting("LastPlaytestTime", math.round(tick()))
 			elseif StudioService.ActiveScript then
