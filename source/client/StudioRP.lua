@@ -39,11 +39,11 @@ function StudioRP.new(plugin: Plugin)
 	self._heartbeat = coroutine.create(function()
 		local activity = self.Activity or mainActivity
 
-		local heartbeatTime = 1
+		local heartbeatInterval = 1
 		local heartbeatsSinceLastTimeChange = 0 -- needs a more concise name
 
 		while true do
-			task.wait(heartbeatTime)
+			task.wait(heartbeatInterval)
 
 			if RunService:IsRunning() then
 				playtestActivity = Activity.new(DateTime.now())
@@ -79,7 +79,7 @@ function StudioRP.new(plugin: Plugin)
 					--TODO: This looks ugly.
 					--ensure playtesting has ended
 					-- before attempting to change activity
-					if (tick() - (tonumber(lastPlaytestTime) or math.huge)) > (heartbeatTime * 2) then
+					if (tick() - (tonumber(lastPlaytestTime) or math.huge)) > (heartbeatInterval * 2) then
 						plugin:SetSetting("LastPlaytestTime", nil)
 						wasPlaytesting = true
 					elseif lastPlaytestTime then
@@ -92,7 +92,7 @@ function StudioRP.new(plugin: Plugin)
 			local activityToSet = playtestActivity or activity
 
 			local startTime = tick()
-			local success, message = self:SetActivity(activityToSet, wasPlaytesting)
+			local success, message = self:SetActivity(activityToSet, heartbeatInterval, wasPlaytesting)
 
 			local deltaTime = tick() - startTime
 
@@ -104,7 +104,7 @@ function StudioRP.new(plugin: Plugin)
 				and deltaTime > 2
 				and heartbeatsSinceLastTimeChange > (75 / deltaTime)
 			then
-				heartbeatTime += 1
+				heartbeatInterval += 1
 				heartbeatsSinceLastTimeChange = 0
 			end
 
@@ -126,6 +126,7 @@ end
 function StudioRP.SetActivity(
 	self: self,
 	activity: Activity.self,
+	heartbeatInterval: number,
 	wasPlaytesting: boolean
 ): (boolean, string?)
 	self.Activity = activity
@@ -133,6 +134,7 @@ function StudioRP.SetActivity(
 		self.HttpClient.Post,
 		self.HttpClient,
 		activity,
+		heartbeatInterval,
 		wasPlaytesting
 	)
 end

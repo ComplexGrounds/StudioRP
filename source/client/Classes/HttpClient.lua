@@ -40,10 +40,28 @@ function HttpClient.CloseConnection(self: self): ()
 	self:Cleanup()
 end
 
-function HttpClient.Post(self: self, data: {any}, wasPlaytesting: boolean): string
+function HttpClient.Post(
+	self: self,
+	data: {any},
+	heartbeatInterval: number,
+	wasPlaytesting: boolean
+): (string)
+	--TODO: re-add duplicate checking, but ensure the server agrees that it is a
+	-- duplicate! do this by asking the server every 5 requests, maybe?
 	if (not wasPlaytesting) and self._lastState == data.state then
-		error("Repeated")
+		--error("Repeated")
+		--TODO: this is hacky. implement some other way pls!
+		HttpService:PostAsync(
+			self.URL,
+			HttpService:JSONEncode({
+				requestType = "HELLO",
+				requestInterval = heartbeatInterval
+			})
+		)
+
+		return
 	end
+	data.requestInterval = heartbeatInterval
 
 	local response = HttpService:PostAsync(
 		self.URL,
