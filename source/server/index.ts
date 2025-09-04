@@ -1,5 +1,5 @@
-const { Client } = require("discord-rpc");
-const http = require("node:http");
+import { Client, type User } from "discord-rpc";
+import http from "node:http";
 
 const CLIENT_ID = "1351607979018813462";
 const SERVER_PORT = process.env.PORT || 7000;
@@ -8,16 +8,17 @@ const MAX_DISCORD_CONNECTION_INTERVAL = 30e3;
 let lastRequestTimestamp = 0;
 let clientRequestInterval = 30;
 
-Math.clamp = function(number, min, max) {
+function clamp(number: number, min: number, max: number): number {
     return Math.min(Math.max(number, min), max);
 }
 
-function sleep(ms) {
+function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function loginClient(client) {
-    let user;
+async function loginClient(client: Client) {
+    let user: User | undefined;
+
     try {
         let loginPromise = await client.login({
             clientId: CLIENT_ID
@@ -31,8 +32,8 @@ async function loginClient(client) {
     return user;
 }
 
-async function startClient(client) {
-    let user;
+async function startClient(client: Client) {
+    let user: User | undefined;
 
     let sleepTime = 0;
     let attempt = 0;
@@ -40,7 +41,7 @@ async function startClient(client) {
     while (!user) {
         await sleep(sleepTime);
 
-        sleepTime = Math.clamp(
+        sleepTime = clamp(
             sleepTime * 2,
             5e3,
             MAX_DISCORD_CONNECTION_INTERVAL
@@ -77,7 +78,8 @@ setInterval(() => {
 }, clientRequestInterval * 1e3);
 
 http.createServer((request, response) => {
-    let data = "";
+	let chunkData: string = "";
+    let data: any; // TODO: Create a types file whenever the Lua is converted.
 
     function endResponse() {
         if (response.destroyed) {
@@ -88,10 +90,10 @@ http.createServer((request, response) => {
         response.end("SET Activity");
     };
 
-    request.on("data", (chunk) => {
-        data += chunk;
+    request.on("data", (chunk: any) => {
+        chunkData += chunk;
 
-        if (data.length > 1e6) {
+        if (chunkData.length > 1e6) {
             console.log("Too much data! Closing.");
             request.destroy();
         }
@@ -100,12 +102,12 @@ http.createServer((request, response) => {
     request.on("end", () => {
         try {
             try {
-                data = JSON.parse(data);
+                data = JSON.parse(chunkData);
             } catch {
-                data = null;
+                data = undefined;
             }
 
-            if ((discordClient === null) || (discordClient.user === null)) {
+            if ((!discordClient) || (!discordClient.user)) {
                 response.destroy();
                 return;
             }

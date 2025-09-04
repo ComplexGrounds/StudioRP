@@ -1,5 +1,6 @@
 test_request.cmd
 test_data.json
 /node_modules
+/build
 /distribution
 /release
